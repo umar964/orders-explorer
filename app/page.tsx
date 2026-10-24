@@ -47,31 +47,58 @@ const options: Record<string, string[]> = {
 
 const uid = () => Math.random().toString(36).slice(2, 8)
 
-function matches(o: Order, c: Condition) {
-  if (!c.value) return true
 
-  const value = String(o[c.field] ?? '')
-  const target = c.value.toLowerCase()
+function matches(o: Order, c: Condition) {
+  if (!c.value.trim()) return true
+
+  const value = String(o[c.field] ?? '').toLowerCase()
+  const target = c.value.trim().toLowerCase()
 
   if (c.field === 'amount') {
-    const n = Number(c.value)
-    if (Number.isNaN(n)) return true
-    if (c.operator === 'greater than') return o.amount > n
-    if (c.operator === 'less than') return o.amount < n
-    return o.amount === n
+    const amount = o.amount
+    const [min, max] = c.value.split(',').map(Number)
+
+    if (c.operator === 'greater than') return amount > Number(c.value)
+    if (c.operator === 'less than') return amount < Number(c.value)
+    if (c.operator === 'between') {
+      return c.value.includes(',') &&
+        Number.isFinite(min) &&
+        Number.isFinite(max) &&
+        amount >= Math.min(min, max) &&
+        amount <= Math.max(min, max)
+    }
+
+    return amount === Number(c.value)
   }
 
   if (c.field === 'orderDate') {
-    const orderDate = o.orderDate.slice(0, 10)
-    if (c.operator === 'before') return orderDate < c.value
-    if (c.operator === 'after') return orderDate > c.value
-    return orderDate === c.value
+    const date = new Date(o.orderDate).getTime()
+    const targetDate = new Date(c.value).getTime()
+
+    if (Number.isNaN(date) || Number.isNaN(targetDate)) return true
+
+    if (c.operator === 'before') return date < targetDate
+    if (c.operator === 'after') return date > targetDate
+    if (c.operator === 'between') {
+      const [start, end] = c.value.split(',')
+      const startDate = new Date(start).getTime()
+      const endDate = new Date(end).getTime()
+
+      if (Number.isNaN(startDate) || Number.isNaN(endDate)) return true
+
+      return date >= Math.min(startDate, endDate) &&
+        date <= Math.max(startDate, endDate)
+    }
+
+    return o.orderDate.slice(0, 10) === c.value
   }
 
-  if (c.operator === 'equals') return value.toLowerCase() === target
-  if (c.operator === 'does not contain') return !value.toLowerCase().includes(target)
-  return value.toLowerCase().includes(target)
+  if (c.operator === 'equals') return value === target
+  if (c.operator === 'does not contain') return !value.includes(target)
+
+  return value.includes(target)
 }
+
 
 function csv(rows: Order[]) {
   const heads = [
@@ -317,6 +344,34 @@ export default function Page() {
     ['createdAtTimestamp', 'Order date'],
   ]
 
+
+  const getColumnWidth = (key: keyof Order) => {
+  switch (key) {
+    case 'id':
+      return 'w-[125px]'
+    case 'customerName':
+      return 'w-[185px]'
+    case 'email':
+      return 'w-[245px]'
+    case 'amount':
+      return 'w-[120px]'
+    case 'status':
+      return 'w-[120px]'
+    case 'region':
+      return 'w-[100px]'
+    case 'channel':
+      return 'w-[90px]'
+    case 'priority':
+      return 'w-[90px]'
+    case 'createdAtTimestamp':
+      return 'w-[130px]'
+    case 'notes':
+      return 'w-[150px]'
+    default:
+      return 'w-[100px]'
+  }
+}
+
   return (
     <main className="min-h-screen bg-[#f7f8fa] text-[#17202b]">
       <header className="border-b border-[#e4e8ec] bg-white">
@@ -355,7 +410,7 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1500px] px-8 py-7">
+      <div className="mx-auto max-w-[1480px] px-8 py-7">
         <section className="rounded-xl border border-[#e0e5e9] bg-white shadow-[0_1px_2px_rgba(16,24,40,.03)]">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#edf0f2] px-5 py-4">
             <div>
@@ -599,132 +654,189 @@ export default function Page() {
               </button>
             </div>
           </div>
-
-          <div
-            ref={scroller}
-            onScroll={(event) => setScroll(event.currentTarget.scrollTop)}
-            tabIndex={0}
-            aria-label="Orders table. Use arrow keys to move through rows, Enter for details, and Space to select."
-            className="relative h-[560px] overflow-auto outline-none"
-          >
-            <div className="min-w-[1250px]">
-              <div className="sticky top-0 z-20 flex h-10 items-center border-b border-[#e5e9ec] bg-[#fbfcfc] text-[11px] font-semibold uppercase tracking-wide text-[#84909b]">
-                <div className="flex w-12 shrink-0 items-center justify-center">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all filtered orders"
-                    checked={sorted.length > 0 && sorted.every((order) => selected.has(order.id))}
-                    onChange={(event) =>
-                      setSelected(event.target.checked ? new Set(sorted.map((order) => order.id)) : new Set())
-                    }
-                  />
-                </div>
-                {columns.map(([key, label]) => {
-                  const isPinned = key === pin
-                  const width = key === 'id' ? 'w-36' : key === 'customerName' ? 'w-56' : key === 'email' ? 'w-64' : 'w-36'
-                  return (
-                    <div
-                      key={key}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => doSort(key)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') doSort(key)
-                      }}
-                      className={`relative flex h-full shrink-0 cursor-pointer items-center gap-1 border-l border-[#edf0f2] px-3 ${width} ${isPinned ? 'sticky left-12 z-30 bg-[#fbfcfc]' : ''} ${key === 'amount' ? 'justify-end' : ''}`}
-                    >
-                      {label}
-                      {sort.field === key && (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
-                      {isPinned && <span className="ml-auto text-[#1c6b5c]">•</span>}
-                      <GripVertical size={12} className="absolute right-0 text-[#c7ced3]" />
-                    </div>
+   
+    <div
+        ref={scroller}
+        onScroll={(event) => setScroll(event.currentTarget.scrollTop)}
+        tabIndex={0}
+        aria-label="Orders table. Use arrow keys to move through rows, Enter for details, and Space to select."
+        className="relative h-[560px] overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden outline-none"
+      >
+        <div className="w-full min-w-0">
+          <div className="sticky top-0 z-20 flex h-10 items-center border-b border-[#e5e9ec] bg-[#fbfcfc] text-[11px] font-semibold uppercase tracking-wide text-[#84909b]">
+            <div className="flex w-12 shrink-0 items-center justify-center">
+              <input
+                type="checkbox"
+                aria-label="Select all filtered orders"
+                checked={sorted.length > 0 && sorted.every((order) => selected.has(order.id))}
+                onChange={(event) =>
+                  setSelected(
+                    event.target.checked
+                      ? new Set(sorted.map((order) => order.id))
+                      : new Set(),
                   )
-                })}
-              </div>
-
-              <div style={{ height: sorted.length * rowH, position: 'relative' }}>
-                {sorted.slice(visible.start, visible.end).map((order, index) => {
-                  const rowIndex = visible.start + index
-                  return (
-                    <div
-                      key={order.id}
-                      onClick={() => setFocused(rowIndex)}
-                      onDoubleClick={() => setDetail(order)}
-                      className={`absolute left-0 right-0 flex h-11 items-center border-b border-[#f0f2f3] text-xs transition-colors ${rowIndex === focused ? 'bg-[#f0f7f5] ring-1 ring-inset ring-[#b5d8cf]' : 'hover:bg-[#fafcfc]'}`}
-                      style={{ top: rowIndex * rowH }}
-                    >
-                      <div className="flex w-12 shrink-0 items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={selected.has(order.id)}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={() => toggleSelect(order.id)}
-                          aria-label={`Select ${order.id}`}
-                        />
-                      </div>
-                      {columns.map(([key]) => {
-                        const isPinned = key === pin
-                        const width = key === 'id' ? 'w-36' : key === 'customerName' ? 'w-56' : key === 'email' ? 'w-64' : 'w-36'
-                        let cell: React.ReactNode = String(order[key] ?? '—')
-
-                        if (key === 'amount') cell = formatOrderAmount(order.amount)
-                        if (key === 'createdAtTimestamp') cell = formatOrderDate(order.createdAtTimestamp)
-                        if (key === 'status') {
-                          cell = (
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                order.status === 'delivered'
-                                  ? 'bg-[#e9f6f0] text-[#27704f]'
-                                  : order.status === 'pending'
-                                    ? 'bg-[#fff4dc] text-[#946b12]'
-                                    : order.status === 'cancelled'
-                                      ? 'bg-[#fbeceb] text-[#a34842]'
-                                      : 'bg-[#eef3ff] text-[#315caa]'
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          )
-                        }
-
-                        if (key === 'notes') {
-                          cell = order.notes ? `${order.notes.slice(0, 70)}${order.notes.length > 70 ? '…' : ''}` : '—'
-                        }
-
-                        return (
-                          <div
-                            key={key}
-                            className={`flex h-full shrink-0 items-center truncate border-l border-[#f4f5f6] px-3 ${width} ${isPinned ? 'sticky left-12 z-10 bg-inherit' : ''} ${key === 'id' ? 'font-medium text-[#1c6b5c]' : ''} ${key === 'amount' ? 'justify-end font-medium' : ''}`}
-                            title={key === 'notes' ? order.notes : String(order[key] ?? '—')}
-                          >
-                            {cell}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })}
-              </div>
+                }
+              />
             </div>
 
-            {sorted.length === 0 && (
-              <div className="absolute inset-0 top-10 flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-sm font-medium">No orders match your filters.</p>
-                  <p className="mt-1 text-xs text-[#84909b]">Try adjusting your conditions or clear all filters.</p>
-                  <button
-                    onClick={() => {
-                      setGroups([])
-                      setSearch('')
-                    }}
-                    className="mt-3 rounded-md bg-[#1c6b5c] px-3 py-1.5 text-xs font-medium text-white"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
-              </div>
-            )}
+       {columns.map(([key, label]) => {
+  const isPinned = key === pin
+  const width = getColumnWidth(key)
+
+  return (
+    <div
+      key={key}
+      role="button"
+      tabIndex={0}
+      onClick={() => doSort(key)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          doSort(key)
+        }
+      }}
+      className={`relative flex h-full shrink-0 cursor-pointer items-center gap-1 border-l border-[#edf0f2] px-2 ${width} ${
+        isPinned ? 'sticky left-12 z-30 bg-[#fbfcfc]' : ''
+      } ${key === 'amount' ? 'justify-end' : ''}`}
+    >
+      <span className="truncate">{label}</span>
+
+      {sort.field === key &&
+        (sort.dir === 'asc' ? (
+          <ArrowUp size={12} />
+        ) : (
+          <ArrowDown size={12} />
+        ))}
+
+      {isPinned && <span className="ml-auto text-[#1c6b5c]">•</span>}
+
+      <GripVertical
+        size={12}
+        className="absolute right-0 shrink-0 text-[#c7ced3]"
+      />
+    </div>
+  )
+})}
           </div>
+
+          <div style={{ height: sorted.length * rowH, position: 'relative' }}>
+            {sorted.slice(visible.start, visible.end).map((order, index) => {
+              const rowIndex = visible.start + index
+
+              return (
+                <div
+                  key={order.id}
+                  onClick={() => setFocused(rowIndex)}
+                  onDoubleClick={() => setDetail(order)}
+                  className={`absolute left-0 right-0 flex h-11 items-center border-b border-[#f0f2f3] text-xs transition-colors ${
+                    rowIndex === focused
+                      ? 'bg-[#f0f7f5] ring-1 ring-inset ring-[#b5d8cf]'
+                      : 'hover:bg-[#fafcfc]'
+                  }`}
+                  style={{ top: rowIndex * rowH }}
+                >
+                  <div className="flex w-12 shrink-0 items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(order.id)}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={() => toggleSelect(order.id)}
+                      aria-label={`Select ${order.id}`}
+                    />
+                  </div>
+
+                  {columns.map(([key]) => {
+                    const isPinned = key === pin
+
+                    const width =
+                      key === 'id' ? 'w-[125px]' :
+                      key === 'customerName' ? 'w-[150px]' :
+                      key === 'email' ? 'w-[195px]' :
+                      key === 'amount' ? 'w-[110px]' :
+                      key === 'status' ? 'w-[120px]' :
+                      key === 'region' ? 'w-[115px]' :
+                      key === 'channel' ? 'w-[105px]' :
+                      key === 'priority' ? 'w-[105px]' :
+                      key === 'createdAtTimestamp' ? 'w-[145px]' :
+                      key === 'notes' ? 'w-[130px]' :
+                      'w-[100px]'
+
+                    let cell: React.ReactNode = String(order[key] ?? '—')
+
+                    if (key === 'amount') {
+                      cell = formatOrderAmount(order.amount)
+                    }
+
+                    if (key === 'createdAtTimestamp') {
+                      cell = formatOrderDate(order.createdAtTimestamp)
+                    }
+
+                    if (key === 'status') {
+                      cell = (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                            order.status === 'delivered'
+                              ? 'bg-[#e9f6f0] text-[#27704f]'
+                              : order.status === 'pending'
+                                ? 'bg-[#fff4dc] text-[#946b12]'
+                                : order.status === 'cancelled'
+                                  ? 'bg-[#fbeceb] text-[#a34842]'
+                                  : 'bg-[#eef3ff] text-[#315caa]'
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      )
+                    }
+
+                    if (key === 'notes') {
+                      cell = order.notes
+                        ? `${order.notes.slice(0, 70)}${order.notes.length > 70 ? '…' : ''}`
+                        : '—'
+                    }
+
+                    return (
+                      <div
+                        key={key}
+                        className={`flex h-full min-w-0 shrink-0 items-center truncate border-l border-[#f4f5f6] px-2 ${width} ${
+                          isPinned ? 'sticky left-12 z-10 bg-inherit' : ''
+                        } ${key === 'id' ? 'font-medium text-[#1c6b5c]' : ''} ${
+                          key === 'amount' ? 'justify-end font-medium' : ''
+                        }`}
+                        title={key === 'notes' ? order.notes : String(order[key] ?? '—')}
+                      >
+                        <span className="truncate">{cell}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+    
+
+  {sorted.length === 0 && (
+    <div className="absolute inset-0 top-10 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-sm font-medium">No orders match your filters.</p>
+        <p className="mt-1 text-xs text-[#84909b]">
+          Try adjusting your conditions or clear all filters.
+        </p>
+        <button
+          onClick={() => {
+            setGroups([])
+            setSearch('')
+          }}
+          className="mt-3 rounded-md bg-[#1c6b5c] px-3 py-1.5 text-xs font-medium text-white"
+        >
+          Clear all filters
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
         </section>
       </div>
 
