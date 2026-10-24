@@ -354,15 +354,15 @@ export default function Page() {
     case 'email':
       return 'w-[255px]'
     case 'amount':
-      return 'w-[140px]'
+      return 'w-[145px]'
     case 'status':
-      return 'w-[130px]'
+      return 'w-[140px]'
     case 'region':
-      return 'w-[120px]'
+      return 'w-[125px]'
     case 'channel':
-      return 'w-[100px]'
+      return 'w-[105px]'
     case 'priority':
-      return 'w-[110px]'
+      return 'w-[120px]'
     case 'createdAtTimestamp':
       return 'w-[150px]'
     case 'notes':
@@ -679,44 +679,48 @@ export default function Page() {
               />
             </div>
 
-       {columns.map(([key, label]) => {
-  const isPinned = key === pin
-  const width = getColumnWidth(key)
+        {columns.map(([key, label]) => {
+            const isPinned = key === pin
+            const width = getColumnWidth(key)
 
-  return (
-    <div
-      key={key}
-      role="button"
-      tabIndex={0}
-      onClick={() => doSort(key)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          doSort(key)
-        }
-      }}
-      className={`relative flex h-full shrink-0 cursor-pointer items-center gap-1 border-l border-[#edf0f2] px-2 ${width} ${
-        isPinned ? 'sticky left-12 z-30 bg-[#fbfcfc]' : ''
-      } ${key === 'amount' ? 'justify-end' : ''}`}
-    >
-      <span className="truncate">{label}</span>
+            return (
+              <div
+                key={key}
+                role="button"
+                tabIndex={0}
+                onClick={() => doSort(key)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    doSort(key)
+                  }
+                }}
+                className={`relative flex h-full shrink-0 cursor-pointer items-center gap-1 border-l border-[#edf0f2] px-2 ${width} ${
+                  isPinned ? 'sticky left-12 z-30 bg-[#fbfcfc]' : ''
+                } ${
+                  key === 'amount' || key === 'status'
+                    ? 'justify-center text-center'
+                    : 'justify-start text-left'
+                }`}
+              >
+                <span className="truncate">{label}</span>
 
-      {sort.field === key &&
-        (sort.dir === 'asc' ? (
-          <ArrowUp size={12} />
-        ) : (
-          <ArrowDown size={12} />
-        ))}
+                {sort.field === key &&
+                  (sort.dir === 'asc' ? (
+                    <ArrowUp size={12} />
+                  ) : (
+                    <ArrowDown size={12} />
+                  ))}
 
-      {isPinned && <span className="ml-auto text-[#1c6b5c]">•</span>}
+                {isPinned && <span className="text-[#1c6b5c]">•</span>}
 
-      <GripVertical
-        size={12}
-        className="absolute right-0 shrink-0 text-[#c7ced3]"
-      />
-    </div>
-  )
-})}
+                <GripVertical
+                  size={12}
+                  className="absolute right-0 shrink-0 text-[#c7ced3]"
+                />
+              </div>
+            )
+          })}
           </div>
 
           <div style={{ height: sorted.length * rowH, position: 'relative' }}>
@@ -809,8 +813,8 @@ export default function Page() {
   {sorted.length === 0 && (
     <div className="absolute inset-0 top-10 flex items-center justify-center">
       <div className="text-center">
-        <p className="text-sm font-medium">No orders match your filters.</p>
-        <p className="mt-1 text-xs text-[#84909b]">
+        <p className="text-m font-medium">No orders match your filters.</p>
+        <p className="mt-1 text-s text-[#84909b]">
           Try adjusting your conditions or clear all filters.
         </p>
         <button
@@ -818,7 +822,7 @@ export default function Page() {
             setGroups([])
             setSearch('')
           }}
-          className="mt-3 rounded-md bg-[#1c6b5c] px-3 py-1.5 text-xs font-medium text-white"
+          className="mt-3 rounded-md bg-[#1c6b5c] px-3 py-1.5 text-s font-medium text-white"
         >
           Clear all filters
         </button>
