@@ -350,21 +350,21 @@ export default function Page() {
     case 'id':
       return 'w-[125px]'
     case 'customerName':
-      return 'w-[185px]'
+      return 'w-[190px]'
     case 'email':
-      return 'w-[245px]'
+      return 'w-[255px]'
     case 'amount':
-      return 'w-[120px]'
+      return 'w-[140px]'
     case 'status':
-      return 'w-[120px]'
-    case 'region':
-      return 'w-[100px]'
-    case 'channel':
-      return 'w-[90px]'
-    case 'priority':
-      return 'w-[90px]'
-    case 'createdAtTimestamp':
       return 'w-[130px]'
+    case 'region':
+      return 'w-[120px]'
+    case 'channel':
+      return 'w-[100px]'
+    case 'priority':
+      return 'w-[110px]'
+    case 'createdAtTimestamp':
+      return 'w-[150px]'
     case 'notes':
       return 'w-[150px]'
     default:
@@ -745,70 +745,60 @@ export default function Page() {
                     />
                   </div>
 
-                  {columns.map(([key]) => {
-                    const isPinned = key === pin
+  {columns.map(([key]) => {
+  const isPinned = key === pin
+  const width = getColumnWidth(key)
 
-                    const width =
-                      key === 'id' ? 'w-[125px]' :
-                      key === 'customerName' ? 'w-[150px]' :
-                      key === 'email' ? 'w-[195px]' :
-                      key === 'amount' ? 'w-[110px]' :
-                      key === 'status' ? 'w-[120px]' :
-                      key === 'region' ? 'w-[115px]' :
-                      key === 'channel' ? 'w-[105px]' :
-                      key === 'priority' ? 'w-[105px]' :
-                      key === 'createdAtTimestamp' ? 'w-[145px]' :
-                      key === 'notes' ? 'w-[130px]' :
-                      'w-[100px]'
+  let cell: React.ReactNode = String(order[key] ?? '—')
 
-                    let cell: React.ReactNode = String(order[key] ?? '—')
+  if (key === 'amount') {
+    cell = formatOrderAmount(order.amount)
+  }
 
-                    if (key === 'amount') {
-                      cell = formatOrderAmount(order.amount)
-                    }
+  if (key === 'createdAtTimestamp') {
+    cell = formatOrderDate(order.createdAtTimestamp)
+  }
 
-                    if (key === 'createdAtTimestamp') {
-                      cell = formatOrderDate(order.createdAtTimestamp)
-                    }
+  if (key === 'status') {
+    cell = (
+      <span
+        className={`rounded-full px-2 py-0.5 text-[13px] font-medium ${
+          order.status === 'delivered'
+            ? 'bg-[#e9f6f0] text-[#27704f]'
+            : order.status === 'pending'
+              ? 'bg-[#fff4dc] text-[#946b12]'
+              : order.status === 'cancelled'
+                ? 'bg-[#fbeceb] text-[#a34842]'
+                : 'bg-[#eef3ff] text-[#315caa]'
+        }`}
+      >
+        {order.status}
+      </span>
+    )
+  }
 
-                    if (key === 'status') {
-                      cell = (
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            order.status === 'delivered'
-                              ? 'bg-[#e9f6f0] text-[#27704f]'
-                              : order.status === 'pending'
-                                ? 'bg-[#fff4dc] text-[#946b12]'
-                                : order.status === 'cancelled'
-                                  ? 'bg-[#fbeceb] text-[#a34842]'
-                                  : 'bg-[#eef3ff] text-[#315caa]'
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      )
-                    }
+  if (key === 'notes') {
+    cell = order.notes
+      ? `${order.notes.slice(0, 70)}${order.notes.length > 70 ? '…' : ''}`
+      : '—'
+  }
 
-                    if (key === 'notes') {
-                      cell = order.notes
-                        ? `${order.notes.slice(0, 70)}${order.notes.length > 70 ? '…' : ''}`
-                        : '—'
-                    }
-
-                    return (
-                      <div
-                        key={key}
-                        className={`flex h-full min-w-0 shrink-0 items-center truncate border-l border-[#f4f5f6] px-2 ${width} ${
-                          isPinned ? 'sticky left-12 z-10 bg-inherit' : ''
-                        } ${key === 'id' ? 'font-medium text-[#1c6b5c]' : ''} ${
-                          key === 'amount' ? 'justify-end font-medium' : ''
-                        }`}
-                        title={key === 'notes' ? order.notes : String(order[key] ?? '—')}
-                      >
-                        <span className="truncate">{cell}</span>
-                      </div>
-                    )
-                  })}
+  return (
+    <div
+      key={key}
+      className={`flex h-full min-w-0 shrink-0 items-center truncate border-l border-[#f4f5f6] px-2 ${width} ${
+        isPinned ? 'sticky left-12 z-10 bg-inherit' : ''
+      } ${key === 'id' ? 'font-medium text-[#1c6b5c]' : ''} ${
+        key === 'amount' || key === 'status'
+          ? 'justify-center text-center'
+          : ''
+      } ${key === 'amount' ? 'font-medium' : ''}`}
+      title={key === 'notes' ? order.notes : String(order[key] ?? '—')}
+    >
+      <span className="truncate">{cell}</span>
+    </div>
+  )
+})}
                 </div>
               )
             })}
