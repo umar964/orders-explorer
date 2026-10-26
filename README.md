@@ -4,14 +4,14 @@ A focused, frontend-only operations workspace for reviewing, filtering, sorting,
 
 ## Features
 
-- **Order Data:** Deterministic sample orders generated in `data/orders.ts`.
+- **Order Data:** Static, deterministic sample orders generated in `data/orders.ts`.
 - **Virtualized Data Grid:** Custom grid with overscan for efficient rendering, sticky headers, and row selection.
 - **Column Pinning:** Keep the ID and customer columns visible while horizontally scrolling.
 - **Sorting:** Sort orders by supported column values.
 - **Filter Builder:** Create filter conditions and one-level groups with OR conditions and live matching counts.
-- **Search:** Search through orders to find relevant records.
+- **Search:** Search orders to find relevant records.
 - **Keyboard Navigation:** Navigate rows using the keyboard, press Enter to open order details, and press Escape to close the details panel.
-- **Order Details:** Open a selected order to inspect its information.
+- **Order Details:** Inspect information about a selected order.
 - **CSV Export:** Export selected orders, including selected orders hidden by the current filters.
 - **Responsive Layout:** Horizontally scroll the grid on narrower screens.
 - **Empty State:** Display an empty-result state when no orders match the current criteria.
@@ -30,12 +30,12 @@ No backend or third-party table or virtualization library is required.
 
 ## Prerequisites
 
-Before running the project, make sure you have installed:
+Before running the project, install:
 
 - Node.js
-- npm, which is included with Node.js
+- npm, included with Node.js
 
-You can check your installed versions with:
+Verify your installation:
 
 ```bash
 node --version
@@ -65,11 +65,11 @@ npm run dev
 
 ### 4. Open the application
 
-Visit the following URL in your browser:
+Visit:
 
 http://localhost:3000
 
-The development server provides hot reloading as you make changes to the application.
+The development server supports hot reloading while you work on the application.
 
 ## Production Build
 
@@ -85,25 +85,41 @@ npm run build
 npm run start
 ```
 
-The production server starts locally using the port configured by Next.js, typically `3000` unless that port is already in use or overridden.
+The application typically runs on port `3000`, unless that port is already in use or another port is configured.
 
 ## Project Structure
 
 ```text
 orders-explorer/
-├── app/              # Application pages and layout
-├── components/       # Reusable UI components
-├── data/             # Order data and related definitions
-├── design/           # Visual design references
-├── docs/             # Project documentation and design PDF
-├── hooks/            # Custom React hooks
-├── lib/              # Shared utilities and application logic
-├── public/            # Static assets
-├── README.md          # Project documentation
-└── package.json       # Dependencies and scripts
+├── app/                         # Application pages and layout
+├── components/                  # Reusable UI components
+├── data/                        # Order data and data definitions
+├── design/                      # Design assets, if present
+├── docs/
+│   └── orders-explorer-design-boards.pdf
+├── hooks/                       # Custom React hooks
+├── lib/                         # Shared utilities and application logic
+├── README.md                    # Project documentation
+└── package.json                 # Dependencies and scripts
 ```
 
-Some directories may contain additional files depending on the current implementation.
+The structure above describes the main project directories. Individual files and directories may vary with the current implementation.
+
+## Design References
+
+The UI design references for Orders Explorer are available in the `docs/` directory.
+
+**Design document:** `docs/orders-explorer-design-boards.pdf`
+
+The document contains visual references for:
+
+- Main orders dashboard
+- Filter builder
+- Order details panel
+- Empty state
+- Interaction behavior
+
+These references illustrate the intended layout and interactions of the application.
 
 ## Data and Behavior
 
@@ -111,9 +127,9 @@ The application uses static, deterministic sample data, making the prototype eas
 
 - Orders are generated in `data/orders.ts`.
 - Selection is ID-based and remains preserved while filtering.
-- CSV export uses CSV escaping for values containing special characters.
-- Export includes all selected orders, not just the orders currently visible after filtering.
-- Filtering and sorting operate on the locally available order data.
+- CSV export handles values containing special characters.
+- Export includes all selected orders, not just orders currently visible after filtering.
+- Filtering and sorting operate on locally available order data.
 
 ## Known Limitations
 
@@ -121,13 +137,7 @@ The application uses static, deterministic sample data, making the prototype eas
 - Filter, sort, pin, and selection state are maintained in React memory for the current session.
 - URL-based state persistence is reserved for a future data-router integration.
 - Column resize handles are visual affordances in this version; functional column resizing is not implemented.
-- The sample dataset is intended for demonstrating the interface rather than representing a live order management system.
-
-## Design References
-
-The project includes visual references for the Orders Explorer interface and its empty state.
-
-The design documentation PDF is available in the `docs/` directory.
+- The sample dataset is intended to demonstrate the interface rather than represent a live order management system.
 
 ## License
 
