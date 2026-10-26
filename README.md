@@ -1,36 +1,134 @@
 # Orders Explorer
 
-A focused, frontend-only operations workspace for reviewing, filtering, sorting, selecting, and exporting order data.
+A focused, frontend-only operations workspace for reviewing, filtering, sorting, selecting, and exporting order data. Built with Next.js, React, and TypeScript, it provides an interactive order management interface with a virtualized data grid and a flexible filter builder.
 
 ## Features
 
-- 1,200 deterministic sample orders generated in `data/orders.ts`
-- Custom virtualized grid with overscan, sticky header, row selection, sorting, and pinned ID/customer column
-- Filter builder with one-level groups, OR conditions, and live matching counts
-- Search, keyboard row navigation, Enter-to-open details, and Escape-to-close
-- CSV export for all selected orders, including orders hidden by current filters
-- Responsive horizontal grid scrolling and empty-result state
-- Generated visual references in `design/main-screen.png` and `design/empty-state.png`
+- **Order Data:** Deterministic sample orders generated in `data/orders.ts`.
+- **Virtualized Data Grid:** Custom grid with overscan for efficient rendering, sticky headers, and row selection.
+- **Column Pinning:** Keep the ID and customer columns visible while horizontally scrolling.
+- **Sorting:** Sort orders by supported column values.
+- **Filter Builder:** Create filter conditions and one-level groups with OR conditions and live matching counts.
+- **Search:** Search through orders to find relevant records.
+- **Keyboard Navigation:** Navigate rows using the keyboard, press Enter to open order details, and press Escape to close the details panel.
+- **Order Details:** Open a selected order to inspect its information.
+- **CSV Export:** Export selected orders, including selected orders hidden by the current filters.
+- **Responsive Layout:** Horizontally scroll the grid on narrower screens.
+- **Empty State:** Display an empty-result state when no orders match the current criteria.
 
-## Stack
+## Tech Stack
 
-- Next.js 16, React 19, TypeScript
-- Tailwind CSS 4 and Lucide React
-- No backend or third-party table/virtualization library
+- **Framework:** Next.js 16
+- **UI Library:** React 19
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4
+- **Icons:** Lucide React
+- **Data:** Static, locally generated sample data
+- **Grid:** Custom virtualized data grid
 
-## Development
+No backend or third-party table or virtualization library is required.
+
+## Prerequisites
+
+Before running the project, make sure you have installed:
+
+- Node.js
+- npm, which is included with Node.js
+
+You can check your installed versions with:
 
 ```bash
-pnpm install
-pnpm dev
+node --version
+npm --version
 ```
 
-Build for production with `pnpm build` and run with `pnpm start`.
+## Getting Started
 
-## Data and behavior
+### 1. Clone the repository
 
-The dataset is static and deterministic, making it safe to refresh and easy to replace with a future API layer. Selection is ID-based and preserved while filtering. Export uses RFC-style CSV escaping and includes every selected order, not only currently visible rows.
+```bash
+git clone https://github.com/umar964/orders-explorer.git
+cd orders-explorer
+```
 
-## Known limitations
+### 2. Install dependencies
 
-The current prototype keeps filter, sort, pin, and selection state in React memory for the session; the URL persistence contract is reserved for a future data-router integration. Column resize handles are visual affordances in this first pass, while grid virtualization and pinning are fully implemented.
+```bash
+npm install
+```
+
+### 3. Start the development server
+
+```bash
+npm run dev
+```
+
+### 4. Open the application
+
+Visit the following URL in your browser:
+
+http://localhost:3000
+
+The development server provides hot reloading as you make changes to the application.
+
+## Production Build
+
+### Create a production build
+
+```bash
+npm run build
+```
+
+### Start the production server
+
+```bash
+npm run start
+```
+
+The production server starts locally using the port configured by Next.js, typically `3000` unless that port is already in use or overridden.
+
+## Project Structure
+
+```text
+orders-explorer/
+├── app/              # Application pages and layout
+├── components/       # Reusable UI components
+├── data/             # Order data and related definitions
+├── design/           # Visual design references
+├── docs/             # Project documentation and design PDF
+├── hooks/            # Custom React hooks
+├── lib/              # Shared utilities and application logic
+├── public/            # Static assets
+├── README.md          # Project documentation
+└── package.json       # Dependencies and scripts
+```
+
+Some directories may contain additional files depending on the current implementation.
+
+## Data and Behavior
+
+The application uses static, deterministic sample data, making the prototype easy to run locally and straightforward to adapt to a future API integration.
+
+- Orders are generated in `data/orders.ts`.
+- Selection is ID-based and remains preserved while filtering.
+- CSV export uses CSV escaping for values containing special characters.
+- Export includes all selected orders, not just the orders currently visible after filtering.
+- Filtering and sorting operate on the locally available order data.
+
+## Known Limitations
+
+- The application is frontend-only and does not currently use a backend API.
+- Filter, sort, pin, and selection state are maintained in React memory for the current session.
+- URL-based state persistence is reserved for a future data-router integration.
+- Column resize handles are visual affordances in this version; functional column resizing is not implemented.
+- The sample dataset is intended for demonstrating the interface rather than representing a live order management system.
+
+## Design References
+
+The project includes visual references for the Orders Explorer interface and its empty state.
+
+The design documentation PDF is available in the `docs/` directory.
+
+## License
+
+This project was created as a frontend application prototype. Add a license file if you intend to distribute it under a specific open-source license.
