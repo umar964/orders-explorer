@@ -142,3 +142,11 @@ The application uses static, deterministic sample data, making the prototype eas
 ## License
 
 This project was created as a frontend application prototype. Add a license file if you intend to distribute it under a specific open-source license.
+
+## Screenshots
+
+### 1. Main Screen
+![Main Screen](./screenshots/main-screen.png)
+
+### 2. Empty State
+![Empty State](./screenshots/empty-screen.png)
